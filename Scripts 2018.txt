@@ -1,0 +1,1033 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Menlo-Regular;\f2\fmodern\fcharset0 Courier;
+\f3\froman\fcharset0 Times-Roman;}
+{\colortbl;\red255\green255\blue255;\red53\green53\blue53;\red220\green161\blue13;\red60\green95\blue255;
+\red64\green11\blue217;\red180\green36\blue25;\red252\green33\blue24;\red0\green0\blue163;\red224\green228\blue9;
+\red193\green101\blue28;\red200\green20\blue201;\red46\green174\blue187;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww14160\viewh18000\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 I. Demultiplexing and quality filtering \
+	1. Run join_paired_ends.py\
+		-joining both read1 and read2 files\
+	2. Run split_libraries_fastq.py \
+		-Set parameters\
+		-Set output location 	\
+\
+II. Picking OTU (de novo or reference based) \
+	1. -pick_closed_reference_otus.py\
+	    -pick_de_novo_otus.py\
+	    -pick_open_reference_otus.py\
+	2. a>mixture of first 2 (1st by database then de novo)\
+	3. Parallelised using -a -O number_of_cores\
+	4. Start to compare with default greengenes then use SILVA\
+	5. Output will be in OTU-table\
+	6. Use BIOM programme (biom summarize -i path/to/table.biom) to explore and manipulate the 	    table \
+\
+III. Analysing diversity \
+\
+\
+\
+\
+
+\b \ul Overtime when login into cirrus
+\b0 \ulnone  \
+\
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf2 User: {\field{\*\fldinst{HYPERLINK "mailto:sim@login.cirrus.ac"}}{\fldrslt \cf3 sim@login.cirrus.ac}}.uk\
+Password: CincEndPAYI\cf0 \
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 module load miniconda/python2\
+source activate qiime1\
+\
+
+\b \ul Script
+\b0 \ulnone \
+To create script => vim [file_name]\
+Write in script => i\
+Save and exit => :wq\
+ \
+\pard\pardeftab560\slleading20\partightenfactor0
+
+\b \cf0 \ul \ulc0 Download
+\b0 \ulnone \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab560\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf0 \CocoaLigature0 scp -r sim@cirrus.epcc.ed.ac.uk:/lustre/home/d411/sim/2018_02_smb/\cf4 2d_plots\cf0  Plots
+\f0\fs24 \CocoaLigature1 \
+
+\f1\fs22 \CocoaLigature0 scp -r sim@cirrus.epcc.ed.ac.uk:/lustre/home/d411/sim/report/boxplot2.2 boxplot2.2\
+
+\f0\fs24 \CocoaLigature1 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\b \cf0 \ul Upload
+\b0 \ulnone \
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2 \cf0 \expnd0\expndtw0\kerning0
+scp /Users/shengzhangsim/Desktop/map4.txt sim@cirrus.epcc.ed.ac.uk:report\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0 \cf0 \kerning1\expnd0\expndtw0 \
+
+\b \ul Download Silva\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f3\b0 \cf0 \expnd0\expndtw0\kerning0
+\ulnone wget https://www.arb-silva.de/fileadmin/silva_databases/qiime/Silva_128_release.tgz\
+Decompress: 
+\f2 tar zxvf Silva_128_release.tgz\
+
+\f3 \
+Summarise\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf0 \kerning1\expnd0\expndtw0 \CocoaLigature0 biom summarize-table -i 1_otu_table.biom
+\f3\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 \
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f0 \cf0 \kerning1\expnd0\expndtw0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 \
+\pard\pardeftab720\sl420\partightenfactor0
+
+\f2\fs36 \cf0 \expnd0\expndtw0\kerning0
+#!/bin/bash --login\
+#PBS -l walltime=01:00:00\
+#PBS -l select=1:ncpus=2\
+#PBS -N 2017_cr_nojoin_no_golay_serial\
+#PBS -A d411-training\
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+# loading virtualenv\
+echo "loading virtualenv"\
+# NB qiime1 and not qiimel (number one not letter l)\
+source activate qiime1\
+# setting temporary directory\
+export TMPDIR=~/qiime_tmp\
+# splitting libraries\
+echo "splitting libraries"\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 time split_libraries_fastq.py -i 2017_03_smb/Read1.fastq.gz -b 2017_03_smb/Index.fastq.gz --rev_comp_mapping_barcodes --barcode_type 12 -o slout_q20/ -m 2017_03_smb/map.tsv -q 19\
+\pard\pardeftab720\sl420\partightenfactor0
+\cf0 source deactivate\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \kerning1\expnd0\expndtw0 \
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2 \cf0 \expnd0\expndtw0\kerning0
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0 \cf0 \kerning1\expnd0\expndtw0 \
+\
+\
+script_18_1\
+\
+Join paired ends for read 1 and read 2 \
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf5 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=01:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=2\cf0 \
+\cf5 #PBS -N 2017_cr_nojoin_no_golay_serial\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#join paired ends\
+echo join \'93paired ends\'94\
+
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 join_paired_ends.py -m SeqPrep -f ~/2018_02_smb/Read1.fastq.gz -r ~/2018_02_smb/Read2.fastq.gz -b ~/2018_02_smb/
+\f1\fs22 \cf7 \kerning1\expnd0\expndtw0 \CocoaLigature0 Index.fastq.gz 
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 -o ~/2018_02_smb/SeqPrep_joined\
+#deactivate emv\
+source deactivate \
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 \
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_18_2\
+\
+demultiplexing \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=01:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=2\cf0 \
+\cf5 #PBS -N 2018_split_lib\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#splitting libraries\
+echo \'93splitting libraries\'94
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 split_libraries_fastq.py -m map_incomplete.tsv -i ~/2018_02_smb/
+\f1\fs22 \cf4 \kerning1\expnd0\expndtw0 \CocoaLigature0 SeqPrep_joined/\cf7 seqprep_assembled.fastq.gz 
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 -b ~/2018_02_smb/
+\f1\fs22 \cf4 \kerning1\expnd0\expndtw0 \CocoaLigature0 SeqPrep_joined/\cf0 seqprep_assembled.fastq_barcodes.fastq
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1  -o ~/slout -q 19 
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 --
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 rev_comp_barcode 
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 --
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 rev_comp_mapping_barcodes \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 #deactivate emv\
+source deactivate\
+\
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_18_3 \
+\
+Pick closed reference \
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N 2018_pick_closed_reference\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#pick closed reference otus\
+echo pick close reference otus\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 pick_closed_reference_otus.py -i ~/2018_02_smb/slout/seqs.fna -o ~/2018_02_smb/otus18 -a -O 10\
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_18_4 \
+\
+Diversity analyses \
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N 2018_diversity_analyses\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#diversity analysis\
+echo diversity analysis\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 core_diversity_analyses.py -o CDA -i ~/2018_02_smb/otus18/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 otu_table.biom -m 
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 ~/2018_02_smb/map_incomplete.tsv -e 36000 -t ~/2018_02_smb/otus18/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 97_otus.tree -a -O 10
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 script_18_5\
+\
+Core Diversity analyses\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N 2018_new_core_diversity_analyses\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#diversity analysis\
+echo diversity analysis\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 core_diversity_analyses.py -o New_CDA -i ~/2018_02_smb/otus18/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 otu_table.biom -m 
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 ~/2018_02_smb/map.tsv -e 36000 -t ~/2018_02_smb/otus18/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 97_otus.tree -a -O 10
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 script_18_6\
+\
+Phylogeny Tree\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N 2018_phylogeny_tree\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#Phylogeny Tree\
+echo Phylogeny Tree\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 make_phylogeny.py -i ~/2018_02_smb/
+\f1\fs22 \cf4 \kerning1\expnd0\expndtw0 \CocoaLigature0 pynast_aligned_defaults/\cf0  
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 -o ~/2018_02_smb/rep_phylo.tre\
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 script_18_7\
+\
+Alignment \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=12:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=40\cf0 \
+\cf5 #PBS -N 2018_alignment\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#Alignment\
+echo Alignment\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 align_seqs.py -i ~/2018_02_smb/slout/seqs.fna -o ~/2018_02_smb/pynast_aligned_defaults\
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_18_8 \
+\
+Pick closed reference (SILVA) \
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N 2018_pick_closed_reference_SILVA\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#pick closed reference otus silva\
+echo pick close reference otus silva\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 pick_closed_reference_otus.py -i ~/2018_02_smb/slout/seqs.fna -r ~/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 SILVA_128_QIIME_release/rep_set/rep_set_16S_only/97/97_otus_16S.fasta
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1  -t ~/SILVA_128_QIIME_release/taxonomy/16S_only/97/majority_taxonomy_all_levels.txt -o ~/2018_02_smb/otus18_silva -a -O 10\
+#deactivate emv\
+source deactivate\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_18_9 \
+\
+Core diversity analyses (SILVA)\
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N 2018_core_diversity_analyses_silva\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#core diversity analyses silva\
+echo core diversity analyses silva\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 core_diversity_analyses.py -o CDA_Silva -i ~/2018_02_smb/otus18_silva/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 otu_table.biom -m 
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 ~/2018_02_smb/map.tsv -e 36000 -t ~/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 SILVA_128_QIIME_release/trees/97/97_otus.tre -a -O 10
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_18_10 \
+\
+2D Plot\
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N 2d_plot\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#2D Plot\
+echo 2D Plot\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 make_2d_plots.py -i ~/2018_02_smb/CDA_Silva/
+\f1\fs22 \cf4 \kerning1\expnd0\expndtw0 \CocoaLigature0 bdiv_even36000/
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 unweighted_unifrac_pc.txt -m ~/2018_02_smb/map.tsv -o ~/2018_02_smb/2d_plots/\
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_18_11\
+\
+\
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N OTU\cf0 \
+\cf5 #PBS -A d411-training\
+#PBS -j oe\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#OTU\
+echo OTU \
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 script_CNB_CDA\
+\
+Core Diversity analyses\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N 2018_new_core_diversity_analyses\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#diversity analysis\
+echo diversity analysis\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 core_diversity_analyses.py -o Cnb_CDA -i ~/cannabis/BIOM/
+\f1\fs22 \cf4 \kerning1\expnd0\expndtw0 \CocoaLigature0 26568
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 /
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 all.biom -m 
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 ~/cannabis/mapping_files/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 26568_mapping_file.tsv
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1  -e 36000 -t ~/2018_02_smb/otus18/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 97_otus.tree -a -O 10
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 script_CNB_CDA\
+\
+Extract barcode\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf0 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\cf5 #PBS -l walltime=05:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=20\cf0 \
+\cf5 #PBS -N 2018_extractB\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#Extract Barcode\
+echo extract barcode\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 extract_barcodes.py -f ~/cannabis/read1/1.gz -r ~/cannabis/read2/2.gz 
+\f3\i -
+\i0 -bc1_len 12 
+\i -
+\i0 -bc2_len 12 
+\f2 --map_fp ~/cannabis/mapping_files/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 2001_mapping_file.txt
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \
+#deactivate emv\
+source deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 script_CNB_SL\
+\
+demultiplexing \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=01:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N 2018_split_lib\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#splitting libraries\
+echo \'93splitting libraries\'94
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 split_libraries_fastq.py -m ~/cannabis/mapping_files/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 2001_mapping_file.txt
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1   -i ~/cannabis/
+\f1\fs22 \cf4 \kerning1\expnd0\expndtw0 \CocoaLigature0 read1/1.gz\cf7  
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 -b ~/cannabis/read2/2.gz -o ~/cannabis/slout -q 19 
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 --
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 rev_comp_barcode 
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 --
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 rev_comp_mapping_barcodes \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf0 #deactivate emv\
+source deactivate\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 script_CNB_MERGE_OTU\
+\
+MERGE OTU \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=02:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N 2018_merge\cf0 \
+\cf5 #PBS -A d411-training\
+#PBS -j oe\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#merge otu\
+echo \'93merge otu\'94\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 merge_otu_tables.py -i 1_otu_table.biom,otu_table.biom -o merged_otu_table.biom\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf0 #deactivate emv\
+source deactivate\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf0 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf0 script_CNB_MERGE_MF\
+\
+MERGE mapping file \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=02:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N 2018_merge\cf0 \
+\cf5 #PBS -A d411-training\
+#PBS -j oe\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#merge mf\
+echo \'93merge mf\'94\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 merge_mapping_files.py -m 2001_mapping_file.txt,map.txt -o merged_mapping.txt -n 'Data not collected'\
+#deactivate emv\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf0 source deactivate
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 script_2D_Merged\
+\
+2D Plot\
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=02:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N 2d_plot\cf0 \
+\cf5 #PBS -A d411-training\
+#PBS -j oe\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#2D Plot\
+echo 2D Plot\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 make_2d_plots.py -i ~/cannabis/Cnb_Merged_CDA/bdiv_even3600
+\f1\fs22 \cf4 \kerning1\expnd0\expndtw0 \CocoaLigature0 /
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 unweighted_unifrac_pc.txt -m ~/cannabis/mapping_files/MERGE/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 merged_mapping.txt 
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 -o ~/cannabis/cnb_2d_plots/\
+#deactivate emv\
+source deactivate\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf0 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_filter_otu\
+\
+filter otu\
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=02:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N filter_otu\cf0 \
+\cf5 #PBS -A d411-training\
+#PBS -j eo\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#filter otu\
+echo \'93filter out\'94\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 filter_samples_from_otu_table.py -i ~/cannabis/BIOM_Table/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 merged_otu_table.biom
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1  -o filtered_otu_table.biom -m ~/cannabis/mapping_files/MERGE/
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 merged_mapping.txt
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1  -s 'SampleType:Soil\'92\
+#deactivate emv\
+source deactivate\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf0 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_adonis\
+\
+Adonis\
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=01:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N adonis\cf0 \
+\cf5 #PBS -A d411-training\
+#PBS -j eo\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f3\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 module load\'a0R-3.3.1-gcc-6.2.0-zjrjm3s
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 #adonis\
+echo \'93adonis\'94\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 compare_categories.py --method adonis -i ~
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 /cannabis/updated/Cnb_CDA_GG2/bdiv_even8000/
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 unweighted_unifrac_dm.txt -m ~
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 /cannabis/updated/updated2_
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 map.txt -c Experiment -o adonis_out -n 999\
+#deactivate emv\
+source deactivate\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_anosim\
+\
+Anosim\
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=01:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N anosim\cf0 \
+\cf5 #PBS -A d411-training\
+#PBS -j eo\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f3\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 module load\'a0R-3.3.1-gcc-6.2.0-zjrjm3s
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 #anosim\
+echo \'93anosim\'94\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 compare_categories.py --method anosim -i ~
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 /cannabis/updated/Cnb_CDA_GG2/bdiv_even8000/
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 unweighted_unifrac_dm.txt -m ~
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 /cannabis/updated/updated2_
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 map.txt -c Experiment -o anosim_out -n 999\
+#deactivate emv\
+source deactivate\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf0 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+script_box_plot\
+\
+box plot\
+\
+
+\f1\fs22 \cf5 \kerning1\expnd0\expndtw0 \CocoaLigature0 #!/bin/bash --login\cf0 \
+\cf5 #PBS -l walltime=01:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N box_plot\cf0 \
+\cf5 #PBS -A d411-training\
+#PBS -j eo\cf0 \
+cd $PBS_O_WORKDIR\
+module load miniconda/python2\
+\cf5 # loading virtualenv\cf0 \
+echo \cf6 "loading virtualenv"\cf0 \
+#setting temp directory \
+export TMPDIR=~/qiime_tmp\
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+source activate qiime1\
+#box plot\
+echo \'93box_plot\'94\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 make_distance_boxplots.py -d ~
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 /cannabis/updated/Cnb_CDA_GG2/bdiv_even8000/
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 unweighted_unifrac_dm.txt -m ~
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 /cannabis/updated/updated2_
+\f2\fs24 \expnd0\expndtw0\kerning0
+\CocoaLigature1 map.txt -f Experiment -o ~/report/boxplot\
+#deactivate emv\
+source deactivate\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf0 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\cf5 \
+#!/\cf8 \cb9 bin\cf5 \cb1 /bash --login\cf0 \
+\cf5 #PBS -l walltime=01:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N box_plot\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+\cf5 #PBS -j eo\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 cd\cf0  \cf11 $PBS_O_WORKDIR\cf0 \
+module load miniconda/python2\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 # loading virtualenv\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 echo\cf6  \cf10 "\cf6 loading virtualenv\cf10 "\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 #setting temp directory \cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 export\cf12  TMPDIR=\cf0 ~/qiime_tmp\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 source\cf0  activate qiime1\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 #box plot\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 echo\cf6  ?\cf5 ~@~\\\cf6 box_plot?\cf5 ~@~]\cf0 \
+compare_alpha_diversity.py \cf11 -i\cf0  ~/report/updated/Cnb_CDA_GG2/arare_max8000/alpha_div_collated/PD_whole_tree.txt \cf11 -m\cf0  ~/cannabis/updated/updated2_map.txt \cf11 -c\cf0  Experiment \cf11 -o\cf0  ~/report/alpha/PD_dmax_parametric \cf11 -t\cf0  parametric\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 #deactivate emv\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 source\cf0  deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\cf5 \
+#!/\cf8 \cb9 bin\cf5 \cb1 /bash --login\cf0 \
+\cf5 #PBS -l walltime=01:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N core\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+\cf5 #PBS -j eo\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 cd\cf0  \cf11 $PBS_O_WORKDIR\cf0 \
+module load miniconda/python2\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 # loading virtualenv\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 echo\cf6  \cf10 "\cf6 loading virtualenv\cf10 "\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 #setting temp directory \cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 export\cf12  TMPDIR=\cf0 ~/qiime_tmp\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 source\cf0  activate qiime1\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 #core\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 echo\cf6  ?\cf5 ~@~\\\cf6 core?\cf5 ~@~]\cf0 \
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 compute_core_microbiome.py -i ~/report/core/cnb/f_otu_table.biom -o ~/report/core/cnb/otu_table_core 
+\f3\i -
+\i0 -min_fraction_for_core 0.98
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 #deactivate emv\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 source\cf0  deactivate\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\cf5 \
+#!/\cf8 \cb9 bin\cf5 \cb1 /bash --login\cf0 \
+\cf5 #PBS -l walltime=01:00:00\cf0 \
+\cf5 #PBS -l select=1:ncpus=32\cf0 \
+\cf5 #PBS -N venn\cf0 \
+\cf5 #PBS -A d411-training\cf0 \
+\cf5 #PBS -j eo\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 cd\cf0  \cf11 $PBS_O_WORKDIR\cf0 \
+module load miniconda/python2\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 # loading virtualenv\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 echo\cf6  \cf10 "\cf6 loading virtualenv\cf10 "\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 #setting temp directory \cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 export\cf12  TMPDIR=\cf0 ~/qiime_tmp\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 # NB qiime1 and not qiimel (number one not letter l)\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 source\cf0  activate qiime1\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 #venn\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 echo\cf6  \'93venn\'94\cf0 \
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f2\fs24 \cf0 \expnd0\expndtw0\kerning0
+\CocoaLigature1 shared_phylotypes.py -i ~/report/core/venn -o ~/report/core/venn/shared_otus.txt
+\f1\fs22 \kerning1\expnd0\expndtw0 \CocoaLigature0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 #deactivate emv\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 source\cf0  deactivate\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\tx6866\pardirnatural\partightenfactor0
+\cf0 \
+}
