@@ -1,0 +1,21 @@
+box plot
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N box_plot
+#PBS -A d411-training
+#PBS -j eo
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#box plot
+echo “box_plot”
+make_distance_boxplots.py -d ~/cannabis/updated/Cnb_CDA_GG2/bdiv_even8000/unweighted_unifrac_dm.txt -m ~/cannabis/updated/updated2_map.txt -f Experiment -o ~/report/boxplot
+#deactivate emv
+source deactivate
