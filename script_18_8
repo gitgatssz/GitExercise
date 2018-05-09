@@ -1,0 +1,21 @@
+MERGE mapping file 
+
+#!/bin/bash --login
+#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N 2018_merge
+#PBS -A d411-training
+#PBS -j oe
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#merge mf
+echo “merge mf”
+merge_mapping_files.py -m 2001_mapping_file.txt,map.txt -o merged_mapping.txt -n 'Data not collected'
+#deactivate emv
+source deactivate
