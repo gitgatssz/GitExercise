@@ -1,0 +1,605 @@
+script_18_1
+
+Join paired ends for read 1 and read 2 
+
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=2
+#PBS -N 2017_cr_nojoin_no_golay_serial
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#join paired ends
+echo join “paired ends”
+join_paired_ends.py -m SeqPrep -f ~/2018_02_smb/Read1.fastq.gz -r ~/2018_02_smb/Read2.fastq.gz -b ~/2018_02_smb/Index.fastq.gz -o ~/2018_02_smb/SeqPrep_joined
+#deactivate emv
+source deactivate 
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_2
+
+demultiplexing 
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=2
+#PBS -N 2018_split_lib
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#splitting libraries
+echo “splitting libraries”
+split_libraries_fastq.py -m map_incomplete.tsv -i ~/2018_02_smb/SeqPrep_joined/seqprep_assembled.fastq.gz -b ~/2018_02_smb/SeqPrep_joined/seqprep_assembled.fastq_barcodes.fastq -o ~/slout -q 19 --rev_comp_barcode --rev_comp_mapping_barcodes 
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_3 
+
+Pick closed reference 
+
+#!/bin/bash --login
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N 2018_pick_closed_reference
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#pick closed reference otus
+echo pick close reference otus
+pick_closed_reference_otus.py -i ~/2018_02_smb/slout/seqs.fna -o ~/2018_02_smb/otus18 -a -O 10
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_4 
+
+Diversity analyses 
+
+#!/bin/bash --login
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N 2018_diversity_analyses
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#diversity analysis
+echo diversity analysis
+core_diversity_analyses.py -o CDA -i ~/2018_02_smb/otus18/otu_table.biom -m ~/2018_02_smb/map_incomplete.tsv -e 36000 -t ~/2018_02_smb/otus18/97_otus.tree -a -O 10
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_5
+
+Core Diversity analyses
+
+#!/bin/bash --login
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N 2018_new_core_diversity_analyses
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#diversity analysis
+echo diversity analysis
+core_diversity_analyses.py -o New_CDA -i ~/2018_02_smb/otus18/otu_table.biom -m ~/2018_02_smb/map.tsv -e 36000 -t ~/2018_02_smb/otus18/97_otus.tree -a -O 10
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_6
+
+Phylogeny Tree
+
+#!/bin/bash --login
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N 2018_phylogeny_tree
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#Phylogeny Tree
+echo Phylogeny Tree
+make_phylogeny.py -i ~/2018_02_smb/pynast_aligned_defaults/ -o ~/2018_02_smb/rep_phylo.tre
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_7
+
+Alignment 
+
+#!/bin/bash --login
+#PBS -l walltime=12:00:00
+#PBS -l select=1:ncpus=40
+#PBS -N 2018_alignment
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#Alignment
+echo Alignment
+align_seqs.py -i ~/2018_02_smb/slout/seqs.fna -o ~/2018_02_smb/pynast_aligned_defaults
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_8 
+
+Pick closed reference (SILVA) 
+
+#!/bin/bash --login
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N 2018_pick_closed_reference_SILVA
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#pick closed reference otus silva
+echo pick close reference otus silva
+pick_closed_reference_otus.py -i ~/2018_02_smb/slout/seqs.fna -r ~/SILVA_128_QIIME_release/rep_set/rep_set_16S_only/97/97_otus_16S.fasta -t ~/SILVA_128_QIIME_release/taxonomy/16S_only/97/majority_taxonomy_all_levels.txt -o ~/2018_02_smb/otus18_silva -a -O 10
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_9 
+
+Core diversity analyses (SILVA)
+
+#!/bin/bash --login
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N 2018_core_diversity_analyses_silva
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#core diversity analyses silva
+echo core diversity analyses silva
+core_diversity_analyses.py -o CDA_Silva -i ~/2018_02_smb/otus18_silva/otu_table.biom -m ~/2018_02_smb/map.tsv -e 36000 -t ~/SILVA_128_QIIME_release/trees/97/97_otus.tre -a -O 10
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_10 
+
+2D Plot
+
+#!/bin/bash --login
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N 2d_plot
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#2D Plot
+echo 2D Plot
+make_2d_plots.py -i ~/2018_02_smb/CDA_Silva/bdiv_even36000/unweighted_unifrac_pc.txt -m ~/2018_02_smb/map.tsv -o ~/2018_02_smb/2d_plots/
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_18_11
+
+
+
+#!/bin/bash --login
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N OTU
+#PBS -A d411-training
+#PBS -j oe
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#OTU
+echo OTU 
+
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_CNB_CDA
+
+Core Diversity analyses
+
+#!/bin/bash --login
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N 2018_new_core_diversity_analyses
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#diversity analysis
+echo diversity analysis
+core_diversity_analyses.py -o Cnb_CDA -i ~/cannabis/BIOM/26568/all.biom -m ~/cannabis/mapping_files/26568_mapping_file.tsv -e 36000 -t ~/2018_02_smb/otus18/97_otus.tree -a -O 10
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_CNB_CDA
+
+Extract barcode
+
+#PBS -l walltime=05:00:00
+#PBS -l select=1:ncpus=20
+#PBS -N 2018_extractB
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#Extract Barcode
+echo extract barcode
+extract_barcodes.py -f ~/cannabis/read1/1.gz -r ~/cannabis/read2/2.gz --bc1_len 12 --bc2_len 12 --map_fp ~/cannabis/mapping_files/2001_mapping_file.txt
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_CNB_SL
+
+demultiplexing 
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N 2018_split_lib
+#PBS -A d411-training
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#splitting libraries
+echo “splitting libraries”
+split_libraries_fastq.py -m ~/cannabis/mapping_files/2001_mapping_file.txt  -i ~/cannabis/read1/1.gz -b ~/cannabis/read2/2.gz -o ~/cannabis/slout -q 19 --rev_comp_barcode --rev_comp_mapping_barcodes 
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_CNB_MERGE_OTU
+
+MERGE OTU 
+
+#!/bin/bash --login
+#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N 2018_merge
+#PBS -A d411-training
+#PBS -j oe
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#merge otu
+echo “merge otu”
+merge_otu_tables.py -i 1_otu_table.biom,otu_table.biom -o merged_otu_table.biom
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_CNB_MERGE_MF
+
+MERGE mapping file 
+
+#!/bin/bash --login
+#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N 2018_merge
+#PBS -A d411-training
+#PBS -j oe
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#merge mf
+echo “merge mf”
+merge_mapping_files.py -m 2001_mapping_file.txt,map.txt -o merged_mapping.txt -n 'Data not collected'
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_2D_Merged
+
+2D Plot
+
+#!/bin/bash --login
+#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N 2d_plot
+#PBS -A d411-training
+#PBS -j oe
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#2D Plot
+echo 2D Plot
+make_2d_plots.py -i ~/cannabis/Cnb_Merged_CDA/bdiv_even3600/unweighted_unifrac_pc.txt -m ~/cannabis/mapping_files/MERGE/merged_mapping.txt -o ~/cannabis/cnb_2d_plots/
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_filter_otu
+
+filter otu
+
+#!/bin/bash --login
+#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N filter_otu
+#PBS -A d411-training
+#PBS -j eo
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#filter otu
+echo “filter out”
+filter_samples_from_otu_table.py -i ~/cannabis/BIOM_Table/merged_otu_table.biom -o filtered_otu_table.biom -m ~/cannabis/mapping_files/MERGE/merged_mapping.txt -s 'SampleType:Soil’
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_adonis
+
+Adonis
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N adonis
+#PBS -A d411-training
+#PBS -j eo
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+module load R-3.3.1-gcc-6.2.0-zjrjm3s
+#adonis
+echo “adonis”
+compare_categories.py --method adonis -i ~/cannabis/updated/Cnb_CDA_GG2/bdiv_even8000/unweighted_unifrac_dm.txt -m ~/cannabis/updated/updated2_map.txt -c Experiment -o adonis_out -n 999
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_anosim
+
+Anosim
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N anosim
+#PBS -A d411-training
+#PBS -j eo
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+module load R-3.3.1-gcc-6.2.0-zjrjm3s
+#anosim
+echo “anosim”
+compare_categories.py --method anosim -i ~/cannabis/updated/Cnb_CDA_GG2/bdiv_even8000/unweighted_unifrac_dm.txt -m ~/cannabis/updated/updated2_map.txt -c Experiment -o anosim_out -n 999
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+script_box_plot
+
+box plot
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N box_plot
+#PBS -A d411-training
+#PBS -j eo
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#box plot
+echo “box_plot”
+make_distance_boxplots.py -d ~/cannabis/updated/Cnb_CDA_GG2/bdiv_even8000/unweighted_unifrac_dm.txt -m ~/cannabis/updated/updated2_map.txt -f Experiment -o ~/report/boxplot
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N box_plot
+#PBS -A d411-training
+#PBS -j eo
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#box plot
+echo ?~@~\box_plot?~@~]
+compare_alpha_diversity.py -i ~/report/updated/Cnb_CDA_GG2/arare_max8000/alpha_div_collated/PD_whole_tree.txt -m ~/cannabis/updated/updated2_map.txt -c Experiment -o ~/report/alpha/PD_dmax_parametric -t parametric
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N core
+#PBS -A d411-training
+#PBS -j eo
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#core
+echo ?~@~\core?~@~]
+compute_core_microbiome.py -i ~/report/core/cnb/f_otu_table.biom -o ~/report/core/cnb/otu_table_core --min_fraction_for_core 0.98
+#deactivate emv
+source deactivate
+
+————————————————————————————————————————————————————————————————————————————————————————————————
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N venn
+#PBS -A d411-training
+#PBS -j eo
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#venn
+echo “venn”
+shared_phylotypes.py -i ~/report/core/venn -o ~/report/core/venn/shared_otus.txt
+#deactivate emv
+source deactivate
+
+
+
+compare_distance_matrices.py --method mantel -i weighted_unifrac_dm.txt,unweighted_unifrac_dm.txt,weighted_unifrac_even100_dm.txt,unweighted_unifrac_even100_dm.txt -o mantel_out -n 999
+
+
+#!/bin/bash --login
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N dm
+#PBS -A d411-training
+#PBS -j eo
+cd $PBS_O_WORKDIR
+module load miniconda/python2
+# loading virtualenv
+echo "loading virtualenv"
+#setting temp directory 
+export TMPDIR=~/qiime_tmp
+# NB qiime1 and not qiimel (number one not letter l)
+source activate qiime1
+#dm
+echo ?~@~\dm?~@~]
+distance_matrix_from_mapping.py -i ~/stat/map4.txt -c DOB
+#deactivate emv
+source deactivate
+
+distance_matrix_from_mapping.py -i Fasting_Map.txt -c DOB
