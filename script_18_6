@@ -1,10 +1,9 @@
-2D Plot
-
 #!/bin/bash --login
-#PBS -l walltime=05:00:00
-#PBS -l select=1:ncpus=20
-#PBS -N 2d_plot
+#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=32
+#PBS -N 2018_new_core_diversity_analyses
 #PBS -A d411-training
+#PBS -j oe
 cd $PBS_O_WORKDIR
 module load miniconda/python2
 # loading virtualenv
@@ -13,8 +12,8 @@ echo "loading virtualenv"
 export TMPDIR=~/qiime_tmp
 # NB qiime1 and not qiimel (number one not letter l)
 source activate qiime1
-#2D Plot
-echo 2D Plot
-make_2d_plots.py -i ~/2018_02_smb/CDA_Silva/bdiv_even36000/unweighted_unifrac_pc.txt -m ~/2018_02_smb/map.tsv -o ~/2018_02_smb/2d_plots/
+#diversity analysis
+echo "diversity analysis"
+core_diversity_analyses.py -o Cnb_CDA -i ~/cannabis/BIOM_Table/filtered2_otu_table.biom -m ~/cannabis/mapping_files/MERGE/merged_mapping.txt -e 3600 -t ~/2018_02_smb/otus18/97_otus.tree -a -O 16
 #deactivate emv
 source deactivate
